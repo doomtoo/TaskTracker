@@ -1,0 +1,19 @@
+{
+  "name": "TaskTracker",
+  "version": "1.0.0",
+  "description": "A Task Tracking Project",
+  "scripts": {
+    "start": "concurrently \"tsc -w\"  \"lite-server --baseDir ./build --port 3333\" \"webpack --config webpack.config.js\"  "
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^3.5.1",
+    "lite-server": "^1.3.1",
+    "webpack": "^3.10.0"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.2.17",
+    "jquery": "^3.2.1"
+  }
+}
