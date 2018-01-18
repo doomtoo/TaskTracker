@@ -6,10 +6,6 @@ var UI = /** @class */ (function () {
     UI.prototype.PopUp = function (text) {
         console.log(text);
     };
-    UI.prototype.Register = function () {
-    };
-    UI.prototype.Login = function () {
-    };
     UI.prototype.ShowRegister = function () {
         $("#register").css("display", "block");
         $("#login").css("display", "none");
