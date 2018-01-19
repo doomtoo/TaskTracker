@@ -25,7 +25,13 @@
         }
         button{
             color:white;
-            background-color:#333333333;
+            background-color:#333;
+        }
+        #TaskTrackerMain
+        {
+            margin-top:200px;
+            background-color:#777;
+            padding:20px;
         }
     </style>
 </head>
@@ -64,6 +70,29 @@
         <br/>
         <br/>
         <button  onclick="Main.ui.ShowLogin()" class="btn btn-primary">Or Login if you have a account</button>
+    </div>
+
+
+    <!--main area for interacting with the task tracker once logged in-->
+    <div id="TaskTrackerMain">
+        <h2>Task Tracker</h2>
+
+        <button onclick="">Show Tasks</button>
+        <div id="task_viewing_area">
+
+        </div>
+
+        <div id="task_entry_area">
+            <h3>Enter new Task</h3>
+
+            <label>Task Name</label>
+            <input type="text" id="new_task_input"/>
+
+            <label>Task Category</label>
+            <input type="text" id="new_task_category_input"/>
+
+            <button onclick="">Enter Task</button>
+        </div>
     </div>
 
 </div>
