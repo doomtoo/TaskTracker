@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var test_1 = require("./test");
 var UI_1 = require("./UI");
 var tasks_1 = require("./tasks");
-var DateTime_1 = require("./DateTime");
 var test = new test_1.Test();
 var php_mysql_comm_url = "http://ackmi.com/projects/TaskTracker/mysql_connect.php";
 $(document).ready(function () {
@@ -192,8 +191,6 @@ var MainObj = /** @class */ (function () {
         this.GetTasksMySQLDates(null, null);
     };
     MainObj.prototype.SubmitTask = function () {
-        //hide the AddTaskForm and Show the AddTaskButton again
-        this.ui.ShowAddTaskBtn();
         console.log("Submit Task clicked!");
         //first get all the fields
         var task = $("#new_task_name").val();
@@ -202,9 +199,9 @@ var MainObj = /** @class */ (function () {
         // let month =
         var start_time = $("#task_start_time").val(); //8 : 25 PM
         console.log("task: " + task + "\ncategory: " + category + "\nstart_date: " + start_date + "\nstart_time: " + start_time);
-        var date_mysql = DateTime_1.DateTime.GetDateForMySQLFromReadable(start_date);
+        var date_mysql = this.GetDateForMySQL(start_date);
         console.log("date formatted for mySQL: " + date_mysql);
-        var time_mysql = DateTime_1.DateTime.GetTimeForMySQLFromReadable(start_time);
+        var time_mysql = this.GetTimeForMySQL(start_time);
         console.log("time formatted for mySQL: " + time_mysql);
         var date_time_mysql = date_mysql + " " + time_mysql;
         console.log("date time form for mySQL: " + date_mysql + " " + time_mysql);
@@ -233,23 +230,9 @@ var MainObj = /** @class */ (function () {
                 }
                 else if (json_obj.type === "success") {
                     self.ui.ShowFeedBack(json_obj.message, UI_1.UI.MESSAGE_SUCCESS);
-                    var task_id = parseInt(json_obj.id);
-                    console.log("got back new task id: " + task_id);
-                    //clear the form
+                    //clear the email input too:
                     $("#new_task_name").val("");
-                    $("#new_task_category").val("");
-                    // console.log("New Task Added json obj: \n"+JSON.stringify(data_to_send_obj));
-                    // console.log("date_time: "+data_to_send_obj.date_time);
-                    //add the task to our tasks array
-                    var task_1 = new tasks_1.Task();
-                    task_1.task = data_to_send_obj.task;
-                    task_1.category = data_to_send_obj.category;
-                    task_1.SetStartDateTimeFromMySQL(data_to_send_obj.date_time);
-                    self.tasks[task_id] = task_1;
-                    //add the task to our UI
-                    self.AddTask(task_1);
-                    //hide the new task input area- once we have a button to add a task
-                    // console.log("Hey, we entered a task!!!!");
+                    console.log("Hey, we entered a task!!!!");
                     // console.log("This after ajax: "+this.constructor.name+", but self: "+self.constructor.name);
                     //so store the id and auth key, and bring up the logged in interface
                     // self.StoreLogin(json_obj.id, json_obj.token);
@@ -259,6 +242,47 @@ var MainObj = /** @class */ (function () {
                 alert('POST failed.');
             }
         });
+    };
+    /*
+    changes date format from:
+    Jan 24 2018
+    to (MYSQL format)
+    2012-06-22 05:40:06
+
+     */
+    MainObj.prototype.GetDateForMySQL = function (date) {
+        var date_split = date.split(" ");
+        var month_name = date_split[0];
+        var day = date_split[1];
+        var year = date_split[2];
+        //https://stackoverflow.com/questions/13566552/easiest-way-to-convert-month-name-to-month-number-in-js-jan-01
+        var month_number = (new Date(Date.parse(month_name + " 1, 2012")).getMonth() + 1).toString();
+        if (month_number.length == 1)
+            month_number = "0" + month_number;
+        console.log("month: " + month_name + ", day:" + day + ", year: " + year + ", month name: " + ", month num: " + month_number);
+        var mysql_format = year + "-" + month_number + "-" + day;
+        return mysql_format;
+    };
+    /*
+    changes time format from:
+    9 : 11 PM
+    to (MYSQL format)
+    08:07:14 (HH MM SS)
+     */
+    MainObj.prototype.GetTimeForMySQL = function (time) {
+        time = time.replace(": ", "");
+        var time_split = time.split(" ");
+        console.log("time : " + time);
+        time_split[0] = (parseInt(time_split[0]) - 1).toString(); //since the time picker is 1am -12pm, but mysql is 0 -24
+        if (time_split[2] === "PM")
+            time_split[0] = (parseInt(time_split[0]) + 12).toString();
+        if (time_split[0].length == 1)
+            time_split[0] = "0" + time_split[0];
+        if (time_split[1].length == 1)
+            time_split[1] = "0" + time_split[1];
+        var mysql_time = time_split[0] + ":" + time_split[1] + ":00";
+        console.log("Time for MYSQL: " + mysql_time);
+        return mysql_time;
     };
     MainObj.prototype.EditTask = function (edit_btn) {
         console.log("Edit task called from element: " + edit_btn + ", \njson:" + JSON.stringify(edit_btn) + "\nclass: " + edit_btn.classList);
@@ -275,9 +299,8 @@ var MainObj = /** @class */ (function () {
         }
         //so now lets unhide the edit task area (put it under this task), and populate the values
         var task_edit = $("#tasks_edit").clone(true);
-        // task_edit.removeAttr("id");//remove id from it
+        task_edit.removeAttr("id"); //remove id from it
         task_edit.css("display", "block");
-        task_edit.attr("id", "task-edit-" + task_id);
         task_edit.appendTo("#task-" + task_id);
         //add task id to close btn to be able to close this
         task_edit.find(".btn-close-task").attr("data-task-id", task_id);
@@ -290,17 +313,9 @@ var MainObj = /** @class */ (function () {
         task_edit.find(".task-input-category").val(task.category);
         task_edit.find(".task-input-start-date").val(task.start_date_time.date_display);
         task_edit.find(".task-input-start-time").val(task.start_date_time.time_display);
-        if (task.end_date_time != null) {
-            task_edit.find(".task-input-end-date").val(task.end_date_time.date_display);
-            task_edit.find(".task-input-end-time").val(task.end_date_time.time_display);
-            // console.log("for task: "+task.task+", end time: "+task.end_date_time.time_display);
-        }
+        task_edit.find(".task-input-end-date").val(task.end_date_time.date_display);
+        task_edit.find(".task-input-end-time").val(task.end_date_time.time_display);
         //also have to set the time and date fields to be able to use the date and time javascript libraries for nice UI
-        //NOTE: this will reset the time/ date to the current value
-        this.ui.WireUpDate(task_edit.find(".task-input-start-date"), false);
-        this.ui.WireUpTime(task_edit.find(".task-input-start-time"), false);
-        this.ui.WireUpDate(task_edit.find(".task-input-end-date"), false);
-        this.ui.WireUpTime(task_edit.find(".task-input-end-time"), false);
     };
     MainObj.prototype.CloseEditTask = function (btn_close) {
         var task_id = parseInt(btn_close.getAttribute("data-task-id"));
@@ -311,113 +326,6 @@ var MainObj = /** @class */ (function () {
         }
     };
     MainObj.prototype.UpdateTask = function (btn_update_task) {
-        //first get which task it was
-        var task_id = parseInt(btn_update_task.getAttribute("data-task-id"));
-        //then get all the values from the inputs
-        //grab the edit window
-        var task_edit_window = $("#task-edit-" + task_id);
-        //lets check if we actually foudn the window:
-        // console.log("")
-        var task_name = task_edit_window.find(".task-input-name").val();
-        var task_category = task_edit_window.find(".task-input-category").val();
-        var task_date_start_str = task_edit_window.find(".task-input-start-date").val();
-        var task_time_start_str = task_edit_window.find(".task-input-start-time").val();
-        var task_date_end_str = task_edit_window.find(".task-input-end-date").val();
-        var task_time_end_str = task_edit_window.find(".task-input-end-time").val();
-        //not working corrrectly
-        console.log("going to submit update task with values: \n" + task_name + "\n" + task_category + "\n" + task_date_start_str + "\n" + task_time_start_str + "\n" + task_date_end_str + "\n" + task_time_end_str);
-        //now convert readable dates and times to mysql compatible ones
-        var date_time_mysql_start = DateTime_1.DateTime.GetDateTimeForMySQLFromReadable(task_date_start_str, task_time_start_str);
-        var date_time_mysql_end = DateTime_1.DateTime.GetDateTimeForMySQLFromReadable(task_date_end_str, task_time_end_str);
-        console.log("date time start for mysql: " + date_time_mysql_start + ", end: " + date_time_mysql_end);
-        //now send it to php
-        var data_to_send_obj = new Object();
-        data_to_send_obj.action = "UpdateTask";
-        data_to_send_obj.user_id = this.id;
-        data_to_send_obj.auth_key = this.auth_key;
-        data_to_send_obj.task_id = task_id;
-        data_to_send_obj.task_name = task_name;
-        data_to_send_obj.category = task_category;
-        data_to_send_obj.date_time_start = date_time_mysql_start;
-        data_to_send_obj.date_time_end = date_time_mysql_end;
-        data_to_send_obj.parent_id = null;
-        var self = this; // The ajax functions are inside a different object, so this won't refer to this object anymore, so have to make an alias up here for it to still have access to the object we're in
-        $.ajax({
-            type: 'POST',
-            url: 'http://ackmi.com/projects/TaskTracker/mysql_connect.php',
-            crossDomain: true,
-            data: data_to_send_obj,
-            // dataType: 'json',
-            dataType: 'text',
-            //jsonp: false, //I added jsonp- by default returns cross origin requests as jsonp istead of json
-            success: function (responseData, textStatus, jqXHR) {
-                console.log("Login Response happened with data: \n" + responseData);
-                var json_obj = JSON.parse(responseData);
-                if (json_obj.type === "error") {
-                    console.log("ERROR: " + json_obj.message);
-                    //self.ui.ShowFeedBack(json_obj.message, UI.MESSAGE_ERROR);
-                }
-                else if (json_obj.type === "success") {
-                    // self.ui.ShowFeedBack(json_obj.message, UI.MESSAGE_SUCCESS);
-                    // //clear the email input too:
-                    // $("#new_task_name").val("");
-                    console.log("Hey, we updated a task!!!!");
-                    //so now update the task object in the array we already have with the update, then tell the UI to update that task
-                    self.tasks[task_id].task = data_to_send_obj.task_name;
-                    self.tasks[task_id].category = data_to_send_obj.category;
-                    self.tasks[task_id].SetStartAndEndDateTimeFromMySQL(data_to_send_obj.date_time_start, data_to_send_obj.date_time_end);
-                    //remove the edit area
-                    task_edit_window.remove();
-                    //then tell main this task needs to be updated in the UI
-                    self.SetTaskUIFromTask($("#task-" + task_id), self.tasks[task_id]);
-                }
-            },
-            error: function (responseData, textStatus, errorThrown) {
-                alert('POST failed.');
-            }
-        });
-    };
-    /*
-    For when the task was updated, so we need to update the ui
-     */
-    // private SetTaskUIFromTask(task_id:number)
-    // {
-    //     let task_ui:JQuery = $("#task-"+task_id);
-    //     //update all the main areas
-    //
-    // }
-    MainObj.prototype.AddTask = function (task) {
-        var task_prototype = $("#task_displayed_protoType").clone(true);
-        task_prototype.css("display", "block");
-        task_prototype.removeAttr("id");
-        task_prototype.appendTo("#tasks_container_date_range");
-        //add the id to it, so we can fetch it easily
-        task_prototype.attr("id", "task-" + task.id);
-        this.SetTaskUIFromTask(task_prototype, task);
-    };
-    /*
-    universal for setting a task UI from a task object- both for updating and for new ones
-     */
-    MainObj.prototype.SetTaskUIFromTask = function (task_ui, task) {
-        //now change out the tag values
-        task_ui.find(".task_displayed_name").html(task.task);
-        task_ui.find(".task_displayed_category").html("(" + task.category + ")");
-        task_ui.find(".task_displayed_start").html("Start: " + task.start_date_time.date_display + ",  " + task.start_date_time.time_display);
-        if (task.end_date_time_str != null)
-            task_ui.find(".task_displayed_end").html(("<br/>End: " + task.end_date_time.date_display + ",  " + task.end_date_time.time_display));
-        else
-            task_ui.find(".task_displayed_end").html("(Task not finished) ");
-        //also store the task id on the edit btn:
-        task_ui.find(".btn_edit_task").attr("data-task-id", task.id);
-        if (task.end_date_time_str != null) {
-            var time_diff = DateTime_1.DateTime.DifferenceInMins(task.start_date_time, task.end_date_time);
-            console.log("for task: " + task.task + ", time difference: " + time_diff);
-            //put in the total time
-            task_ui.find(".task_displayed_total").html("<br/>Total time: " + time_diff);
-        }
-        else {
-            task_ui.find(".task_displayed_total").html("");
-        }
     };
     MainObj.prototype.DeleteTask = function (btn_update_task) {
     };
@@ -433,15 +341,14 @@ var MainObj = /** @class */ (function () {
         console.log("GetTasksMySQLDates clicked!");
         //if we pass 2 nulls, we'll just use the default date range
         if (date_time_start == null) {
-            //lets do up to 30 days ago by default right now?
-            var date_time_ago = new Date();
-            date_time_ago.setDate(date_time_ago.getDate() - 30);
+            var date_day_ago = new Date();
+            date_day_ago.setDate(date_day_ago.getDate() - 1);
             //for adding leading zeroes from: https://stackoverflow.com/questions/3605214/javascript-add-leading-zeroes-to-date
             //-2 gives just the last 2 digits
-            var day_num1 = ("0" + date_time_ago.getDate()).slice(-2);
-            var month_num1 = ("0" + date_time_ago.getMonth() + 1).slice(-2);
+            var day_num1 = ("0" + date_day_ago.getDate()).slice(-2);
+            var month_num1 = ("0" + date_day_ago.getMonth() + 1).slice(-2);
             //have to add 1 to month to change from 0-11 to 1-12
-            date_time_start = date_time_ago.getFullYear() + "-" + month_num1 + "-" + day_num1;
+            date_time_start = date_day_ago.getFullYear() + "-" + month_num1 + "-" + day_num1;
             //now add time to it
             date_time_start = date_time_start + " " + "00:00:00";
             console.log("start of the day yesterday: " + date_time_start);
@@ -501,16 +408,28 @@ var MainObj = /** @class */ (function () {
                             //task.GetDateAndTimeFromMySQL();
                             //so lets grab the task html prototype
                             //task_displayed_protoType
-                            //  let task_prototype:JQuery = $("#task_displayed_protoType").clone(true);
-                            //  task_prototype.css("display", "block");
-                            //  task_prototype.removeAttr("id");
-                            //  task_prototype.appendTo("#tasks_container_date_range");
-                            //
-                            //  //add the id to it, so we can fetch it easily
-                            //  task_prototype.attr("id", "task-"+task.id);
-                            //
-                            // self.SetTaskUIFromTask(task_prototype, task);
-                            self.AddTask(task);
+                            var task_prototype = $("#task_displayed_protoType").clone(true);
+                            task_prototype.css("display", "block");
+                            task_prototype.removeAttr("id");
+                            task_prototype.appendTo("#tasks_container_date_range");
+                            //add the id to it, so we can fetch it easily
+                            task_prototype.attr("id", "task-" + task.id);
+                            //now change out the tag values
+                            task_prototype.find(".task_displayed_name").html(task.task);
+                            task_prototype.find(".task_displayed_category").html("(" + task.category + ")");
+                            task_prototype.find(".task_displayed_start").html(task.start_date_time.date_display + "|  " + task.start_date_time.time_display + " --");
+                            if (task.end_date_time_str != null)
+                                task_prototype.find(".task_displayed_end").html((task.end_date_time.date_display + " | " + task.end_date_time.time_display));
+                            else
+                                task_prototype.find(".task_displayed_end").html("(Task not finished) ");
+                            //also store the task id on the edit btn:
+                            task_prototype.find(".btn_edit_task").attr("data-task-id", task.id);
+                            if (task.end_date_time_str != null) {
+                                //put in the total time
+                                task_prototype.find(".task_displayed_total").html("total time");
+                            }
+                            else
+                                task_prototype.find(".task_displayed_total").html("");
                             //task_prototype.find(".task_displayed_total").html(task.end_date_time);
                         }
                     }

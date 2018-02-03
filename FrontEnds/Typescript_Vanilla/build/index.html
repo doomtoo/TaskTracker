@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Task Tracker</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <meta charset="UTF-8">
+    <title>Task Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 
     <script type="text/javascript">
 
     </script>
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/js/bootstrap.min.js" integrity="sha384-a5N7Y/aK3qNeh15eJKGWxsqtnX/wWdSZSKp+81YjTmS15nvnvxKHuzaWwXHDli+4" crossorigin="anonymous"></script>
+    <!--<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.3/css/bootstrap.min.css" integrity="sha384-Zug+QiDoJOrZ5t4lssLdxGhVrurbmBWopoEl+M6BdEfwnCJZtKxi1KgxUyJq13dy" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="css/libraries/bootstrap.min.css">
+    <link rel="stylesheet" href="css/libraries/pikaday.css">
+    <link rel="stylesheet" href="css/libraries/wickedpicker.min.css">
+
+
 
     <style type="text/css">
         #container
@@ -20,8 +24,9 @@
             background-color:#aaa;
             color:white;
             padding:40px;
-            width: 50%;
-            margin-left:25%;
+            width: 100%;
+            max-width:1400px;
+            margin:0 auto;
         }
         button{
             color:white;
@@ -29,75 +34,405 @@
         }
         #TaskTrackerMain
         {
-            margin-top:200px;
+            /*margin-top:200px;*/
             background-color:#777;
             padding:20px;
         }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+
+
+        /*For timepicker/ wickedpicker*/
+        .wickedpicker__close
+        {
+            font-size: 24px;
+        }
+        .wickedpicker__title
+        {
+            font-size: 16px;
+            padding-top:10px;
+            padding-bottom:10px;
+        }
+        .wickedpicker__controls__control, .wickedpicker__controls__control--separator
+        {
+            font-size: 16px;
+        }
+        .wickedpicker__controls
+        {
+            padding:0px;
+        }
+        .wickedpicker
+        {
+            width:170px;
+        }
+        .task_displayed
+        {
+            background-color:#666;
+            padding: 10px 20px;
+            position: relative;
+            /*height:80px;*/
+        }
+       /* .task_displayed_start
+        {
+            position: absolute;
+            bottom:10px;
+            left:20px;
+            width:100px;
+        }
+        .task_displayed_end
+        {
+            position: absolute;
+            bottom:10px;
+            left:150px;
+        }
+        .btn_edit_task
+        {
+            float:right;
+            margin-top:10px;
+        }*/
+
+
+        /* for labels that are inside input text boxes, but float up when they are not empty/ in focus */
+        .div_with_input
+        {
+            position: relative;
+            margin-top:20px;
+            margin-bottom:20px;
+        }
+        .input_text {
+            /*font-size: 14px;*/
+            width:100%;
+        }
+        .floating-label {
+            transition:all .2s ease;
+            position: absolute;
+            pointer-events: none;
+            left: 5px;
+            top:0px;/*doesn't transition unless you have an initial value set*/
+            bottom: 0px;
+            color:#777;
+            font-size: 16px;
+        }
+        input:focus ~ .floating-label, input:not(:focus):valid ~ .floating-label
+        {
+            top: -20px;
+            font-size: 12px;
+            color:#0062cc;
+        }
+
+
+        /*
+        For a loader/ to show loading while waiting for stuff
+        https://www.w3schools.com/howto/howto_css_loader.asp
+         */
+        .loader
+        {
+            display:none;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin
+        {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .box-with-shadow
+        {
+            padding:20px;
+            background-color:#aaa;
+            box-shadow: 1px 1px 10px #333;
+            margin-top:20px;
+            position: relative;
+        }
+
+        .task_displayed
+        {
+            background-color:#777;
+        }
+        .btn-close-task
+        {
+            position:absolute;
+            top:20px;
+            right:20px;
+            border-radius: 100%;
+            font-family: 'Arial Black'
+        }
+
+
     </style>
 </head>
 
 <body>
 <div id="container">
-    <h1 style="text-align:center">Welcome to the task tracker</h1>
+    <h1 style="text-align:center" id="welcome_header">Welcome to the task tracker</h1>
+
 
     <div class="alert alert-danger" role="alert" id="feedback" style="display: none">
         This is a danger alert—check it out!
     </div>
 
-    <div id="login">
-        <h1>Login</h1>
-        <label>Email address</label>
-        <input type="email"  placeholder="Email address" id="login_email"/>
-        <br/>
-        <label>Password</label>
-        <input type="password" id="login_pwd"/>
-        <br/>
+    <div class="loader"></div>
+
+    <div id="login" style=" display:none;">
+        <h1 style="text-align: center">Login</h1>
+
+
+          <div class="div_with_input">
+            <input type="email" class="input_text" id="login_email" required/>
+            <span class="floating-label">Email address</span>
+          </div>
+
+        <div class="div_with_input">
+            <input type="password" class="input_text" id="login_pwd" required/>
+            <span class="floating-label">Password</span>
+        </div>
+
         <button onclick="Main.Login()" class="btn btn-primary">Login</button>
-        <br/>
-        <br/>
-    <button onclick="Main.ui.ShowRegister()" class="btn btn-primary">Or Register New Account</button>
+        <br><br>
+        <button onclick="Main.ui.ShowRegister()" class="btn btn-primary">Or Register New Account</button>
     </div>
 
     <div id="register" style=" display:none;">
-        <h1>Register</h1>
-        <label>Email address</label>
-        <input type="email"  placeholder="Email address" id="register_email"/>
-        <br/>
-        <label>Password</label>
-        <input type="password" id="register_pwd"/>
-        <br/>
+        <h1 style="text-align: center">Register</h1>
+
+
+        <div class="div_with_input">
+            <input type="email" class="input_text" id="register_email" required/>
+            <span class="floating-label">Email address</span>
+        </div>
+
+        <div class="div_with_input">
+            <input type="password" class="input_text" id="register_pwd" required/>
+            <span class="floating-label">Password</span>
+        </div>
+
         <button onclick="Main.Register()" class="btn btn-primary">Register</button>
-        <br/>
-        <br/>
-        <button  onclick="Main.ui.ShowLogin()" class="btn btn-primary">Or Login if you have a account</button>
+        <br><br>
+        <button onclick="Main.ui.ShowLogin()" class="btn btn-primary">Or Login if you have a account</button>
     </div>
+
+
+
 
 
     <!--main area for interacting with the task tracker once logged in-->
-    <div id="TaskTrackerMain">
-        <h2>Task Tracker</h2>
+    <div id="TaskTrackerMain"  style=" display:none;">
 
-        <button onclick="">Show Tasks</button>
-        <div id="task_viewing_area">
-
+        <div class="top_area clearfix" style="width:100%; position: relative">
+            <h2 style="width:100%; float:left;text-align:center">Task Tracker</h2>
+            <button onclick="Main.LogOut();"  class="btn btn-primary" style="position: absolute;top:0px;right:0px;">Log Out</button>
         </div>
 
-        <div id="task_entry_area">
-            <h3>Enter new Task</h3>
+        <div id="task_entry_area"  class="box-with-shadow">
 
-            <label>Task Name</label>
-            <input type="text" id="new_task_input"/>
+            <!--button to click to add a new task area-->
+            <button onclick="Main.ui.ShowAddTaskForm()" id="btn-add-task" class="btn btn-primary" style="width:100%">Add New Task</button>
 
-            <label>Task Category</label>
-            <input type="text" id="new_task_category_input"/>
+            <div id="add-task-area" style="display:none" class="class">
+                <button onclick="Main.ui.ShowAddTaskBtn()" class="btn btn-danger btn-circle btn-close-task">
+                    X
+                </button>
 
-            <button onclick="">Enter Task</button>
+                <h3>Enter new Task</h3>
+
+                <div class="div_with_input">
+                    <input type="text" id="new_task_name" class="input_text" required/>
+                    <span class="floating-label">Task Name</span>
+                </div>
+
+                <div class="div_with_input">
+                    <input type="text" id="new_task_category" class="input_text" required/>
+                    <span class="floating-label">Task Category</span>
+                </div>
+
+                <div class="div_with_input">
+                    <input id="task_start_date" type="text" class="input_text task-input-start-date" required/>
+                    <span class="floating-label">Start Date</span>
+                </div>
+
+                <div class="div_with_input">
+                    <input id="task_start_time" type="text" class="input_text task-input-start-time" required/>
+                    <span class="floating-label">Start Time</span>
+                </div>
+
+                <!-- &lt;!&ndash;<label>Task Name</label>&ndash;&gt;
+             <input type="text" id="new_task_name" placeholder="Task Name"/>
+
+             &lt;!&ndash;<label>Task Category</label>&ndash;&gt;
+             <input type="text" id="new_task_category" placeholder="Task Category"/>
+
+             &lt;!&ndash;<label>Start Date</label>&ndash;&gt;
+             <input type="text" id="task_start_date" placeholder="Start Date"/>
+
+             &lt;!&ndash;<label>Start Time</label>&ndash;&gt;
+             <input type="text" id="task_start_time" placeholder="Start Time"/>-->
+
+                <button onclick="Main.SubmitTask()"  class="btn btn-primary">Enter Task</button>
+            </div
         </div>
     </div>
 
+    <div id="tasks_container_unfinished"  class="box-with-shadow">
+        <h1>Unfinished Tasks</h1>
+    </div>
+
+
+        <div id="tasks_container_date_range"  class="box-with-shadow">
+            <h1>Recent Tasks</h1>
+            <!--a blank structure for a pretend task, we'll copy and use for displaying all tasks-->
+            <div id="task_displayed_protoType" class="task_displayed box-with-shadow" style="display:none"  data-task_id="">
+                <div class="row">
+                    <div class="col-9">
+                        <div class="row">
+                            <div class="col-12">
+                                <span class="task_displayed_name">Task Name</span>
+                                <span class="task_displayed_category">(Category)</span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <span class="task_displayed_start">Start Time</span>
+                                <span class="task_displayed_end">End Time</span>
+                                <span class="task_displayed_total">Total Time</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <button onclick="Main.EditTask(this)"  class="btn btn-primary btn_edit_task" data-task-id="">Edit Task</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <div id="tasks_edit" class="box-with-shadow tasks_edit" data-task_id="" style="display: none">
+            <h1 style="text-align: center">Edit Tasks</h1>
+
+            <button onclick="Main.CloseEditTask(this);" class="btn btn-danger btn-circle btn-close-task" data-task-id="">
+                X
+            </button>
+
+            <div class="div_with_input">
+                <input type="text" class="input_text task-input-name" required/>
+                <span class="floating-label">Task Name</span>
+            </div>
+
+            <div class="div_with_input">
+                <input type="text" class="input_text task-input-category" required/>
+                <span class="floating-label">Task Category</span>
+            </div>
+
+            <div class="div_with_input">
+                <input type="text" class="input_text task-input-start-date" required/>
+                <span class="floating-label">Start Date</span>
+            </div>
+
+            <div class="div_with_input">
+                <input type="text" class="input_text task-input-start-time" required/>
+                <span class="floating-label">Start Time</span>
+            </div>
+
+            <div class="div_with_input">
+                <input type="text" class="input_text task-input-end-date" required/>
+                <span class="floating-label">End Date</span>
+            </div>
+
+            <div class="div_with_input">
+                <input type="text" class="input_text task-input-end-time" required/>
+                <span class="floating-label">End Time</span>
+            </div>
+
+            <!--<button onclick=""  class="btn btn-danger" >Cancel</button>-->
+            <button onclick="Main.DeleteTask(this)"  class="btn btn-danger btn-delete-task" style="margin:auto auto;" data-task-id="">Delete Task</button>
+            <button onclick="Main.UpdateTask(this)"  class="btn btn-primary btn-update-task" style="float:right;"  data-task-id="">Update Task</button>
+
+
+
+        </div>
+
+
+
+
+
 </div>
+
+<script type="text/javascript" src="js/libraries/jquery-3.3.1.min.js"></script>
+<script type="text/javascript" src="js/libraries/moment.js"></script>
+
+<script type="text/javascript" src="js/libraries/popper.needed.for.bootstrap.min.js"></script>
+<script type="text/javascript" src="js/libraries/bootstrap.bundle.min.js"></script>
+
+<script type="text/javascript" src="js/libraries/pikaday.js"></script>
+<script type="text/javascript" src="js/libraries/wickedpicker.min.js"></script>
+
+
 <script type="text/javascript" src="js/bundle.js"></script>
 
+<script type="text/javascript">
+    //date picker can't work if an element is not displayed/ display:none
+    // var picker = new Pikaday({ field: $('#date_start') });
+    // var date_format_display = 'MMM DD YYYY';
+    // var momentsjs = moment();
+    // $('#task_start_date').val(""+momentsjs.format(date_format_display));
+    /*var picker = new Pikaday(
+        {
+            field: $('#task_start_date')[0],
+            firstDay: 1, //first day of the week (0: Sunday, 1: Monday, etc)
+            minDate: moment().subtract(7, 'days').format(date_format_display), //earliest date that can be selected
+            defaultDate:moment().format(date_format_display),
+            maxDate: moment().add( 7,'days').format(date_format_display),
+            //yearRange: [2000,2020],
+            format: date_format_display,
+            onSelect: function(date) {
+               // console.log("Pikaday, onselect called!"+picker.toString()+", date: "+date.constructor.name);
+               //using moment JS to change it
+                //.set(date)
+                // var momentsjs_new = moment();
+                // // momentsjs_new.format("'YYYY/MM/DD");
+                // momentsjs_new.format("'LLLL");
+                // console.log("momentJS formatted date: "+momentsjs_new);
+            }
+        });*/
+    window.onload = function()
+    {
+        Main.ui.WireUpDate($('#task_start_date'),true);
+
+        //-----------now for time picker---------------
+        Main.ui.WireUpTime($('#task_start_time'),true);
+        // var options = {
+        //     //now: "12:35", //hh:mm 24 hour format only, defaults to current time
+        //     twentyFour: false,  //Display 24 hour format, defaults to false
+        //     //upArrow: 'wickedpicker__controls__control-up',  //The up arrow class selector to use, for custom CSS
+        //     //downArrow: 'wickedpicker__controls__control-down', //The down arrow class selector to use, for custom CSS
+        //     //close: 'wickedpicker__close', //The close class selector to use, for custom CSS
+        //     //hoverState: 'hover-state', //The hover state class to use, for custom CSS
+        //     title: 'Start Time', //The Wickedpicker's title,
+        //     showSeconds: false, //Whether or not to show seconds,
+        //     timeSeparator: ' : ', // The string to put in between hours and minutes (and seconds)
+        //     secondsInterval: 1, //Change interval for seconds, defaults to 1,
+        //     minutesInterval: 1, //Change interval for minutes, defaults to 1
+        //     //beforeShow: null, //A function to be called before the Wickedpicker is shown
+        //     //afterShow: null, //A function to be called after the Wickedpicker is closed/hidden
+        //     //show: null, //A function to be called when the Wickedpicker is shown
+        //     clearable: false, //Make the picker's input clearable (has clickable "x")
+        // };
+        // $('#task_start_time').wickedpicker(options);
+    }
+
+
+</script>
 </body>
 
 </html>
