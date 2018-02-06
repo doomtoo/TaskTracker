@@ -16,7 +16,8 @@
     <link rel="stylesheet" href="css/libraries/pikaday.css">
     <link rel="stylesheet" href="css/libraries/wickedpicker.min.css">
 
-
+    <link rel="stylesheet" href="css/libraries/vex.css" />
+    <link rel="stylesheet" href="css/libraries/vex-theme-default.css" />
 
     <style type="text/css">
         #container
@@ -188,7 +189,7 @@
 
 
           <div class="div_with_input">
-            <input type="email" class="input_text" id="login_email" required/>
+            <input type="text" class="input_text" id="login_email" required/>
             <span class="floating-label">Email address</span>
           </div>
 
@@ -207,7 +208,7 @@
 
 
         <div class="div_with_input">
-            <input type="email" class="input_text" id="register_email" required/>
+            <input type="text" class="input_text" id="register_email" required/>
             <span class="floating-label">Email address</span>
         </div>
 
@@ -308,9 +309,15 @@
                         </div>
                     </div>
                     <div class="col-3">
-                        <button onclick="Main.EditTask(this)"  class="btn btn-primary btn_edit_task" data-task-id="">Edit Task</button>
+                        <button onclick="Main.EditTask(this)"  class="btn btn-primary btn-edit-task" data-task-id="">Edit Task</button>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-12">
+                        <button onclick="Main.FinishTask(this)"  class="btn btn-info btn-block btn-finish-task" data-task-id="" style="margin-top:20px;">End Task</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
@@ -354,11 +361,8 @@
                 <span class="floating-label">End Time</span>
             </div>
 
-            <!--<button onclick=""  class="btn btn-danger" >Cancel</button>-->
             <button onclick="Main.DeleteTask(this)"  class="btn btn-danger btn-delete-task" style="margin:auto auto;" data-task-id="">Delete Task</button>
             <button onclick="Main.UpdateTask(this)"  class="btn btn-primary btn-update-task" style="float:right;"  data-task-id="">Update Task</button>
-
-
 
         </div>
 
@@ -376,6 +380,9 @@
 
 <script type="text/javascript" src="js/libraries/pikaday.js"></script>
 <script type="text/javascript" src="js/libraries/wickedpicker.min.js"></script>
+
+<script type="text/javascript" src="js/libraries/vex.combined.min.js"></script>
+<script>vex.defaultOptions.className = 'vex-theme-default'</script>
 
 
 <script type="text/javascript" src="js/bundle.js"></script>

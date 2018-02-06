@@ -33,7 +33,7 @@ var Task = /** @class */ (function () {
     };
     Task.prototype.Init = function () {
         this.start_date_time = new DateTime_1.DateTime(this.start_date_time_str);
-        if (this.end_date_time_str != null)
+        if (!Tools_1.Tools.IsNull(this.end_date_time_str))
             this.end_date_time = new DateTime_1.DateTime(this.end_date_time_str);
     };
     /*
@@ -43,12 +43,21 @@ var Task = /** @class */ (function () {
         this.start_date_time_str = start_date_time_mysql_str;
         this.end_date_time_str = end_date_time_mysql_str;
         this.start_date_time.SetDateTimeFromMySQL(this.start_date_time_str);
-        if (this.end_date_time_str == null)
+        if (Tools_1.Tools.IsNull(this.end_date_time_str))
             this.end_date_time = null;
-        else if (this.end_date_time == null)
+        else if (Tools_1.Tools.IsNull(this.end_date_time) || this.end_date_time === null)
             this.end_date_time = new DateTime_1.DateTime(this.end_date_time_str);
         else
             this.end_date_time.SetDateTimeFromMySQL(this.end_date_time_str);
+    };
+    Task.prototype.SetEndDateTimeFromMySQL = function (end_date_time_mysql_str) {
+        this.end_date_time_str = end_date_time_mysql_str;
+        if (!Tools_1.Tools.IsNull(end_date_time_mysql_str)) {
+            if (Tools_1.Tools.IsNull(this.end_date_time) || this.end_date_time === null)
+                this.end_date_time = new DateTime_1.DateTime(this.end_date_time_str);
+            else
+                this.end_date_time.SetDateTimeFromMySQL(this.end_date_time_str);
+        }
     };
     Task.prototype.SetStartDateTimeFromMySQL = function (start_date_time_mysql_str) {
         this.start_date_time_str = start_date_time_mysql_str;
@@ -82,4 +91,4 @@ var TaskHandler = /** @class */ (function () {
     return TaskHandler;
 }());
 exports.TaskHandler = TaskHandler;
-//# sourceMappingURL=tasks.js.map
+//# sourceMappingURL=Tasks.js.map

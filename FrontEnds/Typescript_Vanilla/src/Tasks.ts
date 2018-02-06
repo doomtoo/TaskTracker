@@ -57,7 +57,7 @@ export class Task
     {
         this.start_date_time = new DateTime(this.start_date_time_str);
 
-        if(this.end_date_time_str!=null)//since the task could be unfinished/ no end date yet
+        if(!Tools.IsNull(this.end_date_time_str))//since the task could be unfinished/ no end date yet
             this.end_date_time = new DateTime(this.end_date_time_str);
     }
     /*
@@ -70,12 +70,23 @@ export class Task
 
         this.start_date_time.SetDateTimeFromMySQL(this.start_date_time_str);
 
-        if(this.end_date_time_str==null)//since the task could be unfinished/ no end date yet
+        if(Tools.IsNull(this.end_date_time_str))//since the task could be unfinished/ no end date yet
             this.end_date_time=null;
-        else if(this.end_date_time==null)
+        else if(Tools.IsNull(this.end_date_time)||this.end_date_time===null)
             this.end_date_time = new DateTime(this.end_date_time_str);
         else
             this.end_date_time.SetDateTimeFromMySQL(this.end_date_time_str);
+    }
+    public SetEndDateTimeFromMySQL(end_date_time_mysql_str:string)
+    {
+        this.end_date_time_str=end_date_time_mysql_str;
+        if(!Tools.IsNull(end_date_time_mysql_str))
+        {
+            if(Tools.IsNull(this.end_date_time)||this.end_date_time===null)//have to add 2nd check for TS compiler
+                this.end_date_time = new DateTime(this.end_date_time_str);
+            else
+                this.end_date_time.SetDateTimeFromMySQL(this.end_date_time_str);
+        }
     }
     public SetStartDateTimeFromMySQL(start_date_time_mysql_str:string)
     {

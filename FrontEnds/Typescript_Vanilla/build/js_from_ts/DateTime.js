@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 /*
 To handle transferring from human readable dates and times to MYSQL compatible ones
  */
+var Tools_1 = require("./Tools");
 var DateTime = /** @class */ (function () {
     //public day_display:string; //01-31
     function DateTime(date_time_mysql_str) {
@@ -141,9 +142,39 @@ var DateTime = /** @class */ (function () {
         return mysql_time;
     };
     DateTime.GetDateTimeForMySQLFromReadable = function (date, time) {
+        console.log("GetDateTimeForMySQLFromReadable: " + date + ", " + time);
+        if (Tools_1.Tools.IsNull(date) || Tools_1.Tools.IsNull(time))
+            return null;
         var date_mysql = this.GetDateForMySQLFromReadable(date);
         var time_mysql = this.GetTimeForMySQLFromReadable(time);
         return date_mysql + " " + time_mysql;
+    };
+    // mysql format: 2012-06-22 05:40:06
+    DateTime.GetDateTimeMySQLFromDate = function (date) {
+        var month = (date.getMonth() + 1).toString(); //normally 0-11
+        if (month.length == 1)
+            month = "0" + month;
+        var day = date.getDate().toString();
+        if (day.length == 1)
+            day = "0" + day;
+        var hour = date.getHours().toString();
+        if (hour.length == 1)
+            hour = "0" + hour;
+        var mins = date.getMinutes().toString();
+        if (mins.length == 1)
+            mins = "0" + mins;
+        var secs = date.getSeconds().toString();
+        if (secs.length == 1)
+            secs = "0" + secs;
+        var str_date_time_mysql = date.getFullYear() + "-" + month + "-" + day + " " + hour + ":" + mins + ":" + secs;
+        return str_date_time_mysql;
+    };
+    /*
+    For gettign the current date/ time for sending to mysql
+     */
+    DateTime.GetCurrentDateTimeMySQL = function () {
+        var date = new Date();
+        return this.GetDateTimeMySQLFromDate(date);
     };
     return DateTime;
 }());

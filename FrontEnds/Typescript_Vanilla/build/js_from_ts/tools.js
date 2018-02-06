@@ -4,7 +4,7 @@ var Tools = /** @class */ (function () {
     function Tools() {
     }
     Tools.IsNull = function (obj) {
-        return obj === null || obj === undefined;
+        return obj === null || obj === undefined || obj.length === 0 || obj === "NULL"; //for blank strings
     };
     return Tools;
 }());
