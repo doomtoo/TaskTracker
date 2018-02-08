@@ -1,13 +1,14 @@
 import {UI} from "./UI";
 import {Task, TaskHandler} from "./Tasks";
 
-import * as Moment from "moment";
+// import * as Moment from "moment";
 import {DateTime} from "./DateTime";
 import {Tools} from "./Tools";
 import {Config} from "./Config";;
 
 //for vex modal dialog
 declare var vex:any; // way of getting JS loaded libraries working properly
+
 
 
 export class MainObj
@@ -21,6 +22,8 @@ export class MainObj
     public logged_in:boolean=false;
 
     public tasks:Task[];
+
+    // public tools:Tools= new Tools();//just for acessing from JS
 
     constructor()
     {
@@ -106,8 +109,8 @@ export class MainObj
     Register()
     {
         //have to cast as any to get typescript to ignore that jquery.val may return undefined, and errors out
-        let email:string = <any>$("#register_email").val();
-        let pwd:string = <any>$("#register_pwd").val();
+        let email:string = Tools.SanitizeInput(<any>$("#register_email").val());
+        let pwd:string = Tools.SanitizeInput(<any>$("#register_pwd").val());
         console.log("Register: email and pwd entered: "+email+", "+pwd);
 
         //so lets check the input first, and provide an error if something was wrong/ they didn't enter both inputs
@@ -148,8 +151,8 @@ export class MainObj
     Login()
     {
 
-        let email:string = <any>$("#login_email").val();
-        let pwd:string = <any>$("#login_pwd").val();
+        let email:string = Tools.SanitizeInput(<any>$("#login_email").val());
+        let pwd:string = Tools.SanitizeInput(<any>$("#login_pwd").val());
 
         //clear password
         $("#login_pwd").val("");
@@ -214,8 +217,8 @@ export class MainObj
         this.ui.ShowAddTaskBtn();
 
         //first get all the fields
-        let task:string = <string>$("#new_task_name").val();
-        let category:string = <string>$("#new_task_category").val();
+        let task:string = Tools.SanitizeInput(<string>$("#new_task_name").val());
+        let category:string = Tools.SanitizeInput(<string>$("#new_task_category").val());
         let start_date:string = <string>$("#task_start_date").val(); //Jan 24 2018
         let start_time:string = <string>$("#task_start_time").val(); //8 : 25 PM
         let date_mysql:string = DateTime.GetDateForMySQLFromReadable(start_date);
@@ -249,6 +252,8 @@ export class MainObj
 
             //add the task to our tasks array
             let task:Task = new Task();
+
+            task.id=task_id;
             task.task=data_to_send_obj.task;
             task.category=data_to_send_obj.category;
             task.SetStartDateTimeFromMySQL(data_to_send_obj.date_time);
@@ -299,8 +304,8 @@ export class MainObj
         //now populate in all the task info:
         //have to grab the task object
         let task:Task = this.tasks[task_id];
-        task_edit.find(".task-input-name").val(task.task);
-        task_edit.find(".task-input-category").val(task.category);
+        task_edit.find(".task-input-name").val(Tools.UnSanitizeInput(task.task));
+        task_edit.find(".task-input-category").val(Tools.UnSanitizeInput(task.category));
 
 
         task_edit.find(".task-input-start-date").val(task.start_date_time.date_display);
@@ -362,7 +367,7 @@ export class MainObj
         {
             //so now update the task object in the array we already have with the update, then tell the UI to update that task
             self.tasks[task_id].task= data_to_send_obj.task_name;
-            self.tasks[task_id].category= data_to_send_obj.category;
+
             self.tasks[task_id].SetEndDateTimeFromMySQL(data_to_send_obj.date_time_end);
 
             //then tell main this task needs to be updated in the UI
@@ -388,8 +393,8 @@ export class MainObj
         //lets check if we actually foudn the window:
         // console.log("")
 
-        let task_name:string = <string>task_edit_window.find(".task-input-name").val();
-        let task_category:string = <string>task_edit_window.find(".task-input-category").val();
+        let task_name:string = Tools.SanitizeInput(<string>task_edit_window.find(".task-input-name").val());
+        let task_category:string = Tools.SanitizeInput(<string>task_edit_window.find(".task-input-category").val());
         let task_date_start_str:string = <string>task_edit_window.find(".task-input-start-date").val();
         let task_time_start_str:string = <string>task_edit_window.find(".task-input-start-time").val();
         let task_date_end_str:string = <string>task_edit_window.find(".task-input-end-date").val();
@@ -451,7 +456,14 @@ export class MainObj
         let task_prototype:JQuery = $("#task_displayed_protoType").clone(true);
         task_prototype.css("display", "block");
         task_prototype.removeAttr("id");
-        task_prototype.appendTo("#tasks_container_date_range");
+
+        //should sort them into unfinished tasks vs. finished tasks
+        if(task.end_date_time!=null)
+            //task_prototype.prependTo("#tasks_container_date_range");//prepend- so they are organized by date/ most recent
+           task_prototype.appendTo("#tasks_container_date_range");
+        else
+            // task_prototype.prependTo("#tasks_container_unfinished");
+            task_prototype.appendTo("#tasks_container_unfinished");
 
         //add the id to it, so we can fetch it easily
         task_prototype.attr("id", "task-"+task.id);
@@ -464,8 +476,8 @@ export class MainObj
     private SetTaskUIFromTask(task_ui:JQuery, task:Task)
     {
         //now change out the tag values
-        task_ui.find(".task_displayed_name").html(task.task);
-        task_ui.find(".task_displayed_category").html("("+task.category+")");
+        task_ui.find(".task_displayed_name").html(Tools.UnSanitizeInput(task.task));
+        task_ui.find(".task_displayed_category").html("("+Tools.UnSanitizeInput(task.category)+")");
         task_ui.find(".task_displayed_start").html("Start: "+task.start_date_time.date_display+ ",  "+task.start_date_time.time_display);
 
         if(!Tools.IsNull(task.end_date_time_str))
@@ -657,3 +669,4 @@ var Main:MainObj = new MainObj();
 
 //cast window as any to trick typescript into not throwing an error because window doesn't have property main
 (window as any).Main=Main;
+(window as any).Tools=Tools;//just for testing out tools static functions

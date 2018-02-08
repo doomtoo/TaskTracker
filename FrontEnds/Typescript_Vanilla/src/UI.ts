@@ -1,8 +1,9 @@
 // var Pikaday:any;
-import * as moment from "moment";
+// import * as moment from "moment";
 import {DateTime} from "./DateTime";
 import {Tools} from "./Tools";
 declare var Pikaday:any; // way of getting JS loaded libraries working properly
+declare var moment:any;
 // declare var moment:any;
 
 export class UI

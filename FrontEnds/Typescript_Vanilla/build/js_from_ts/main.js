@@ -2,11 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var UI_1 = require("./UI");
 var Tasks_1 = require("./Tasks");
+// import * as Moment from "moment";
 var DateTime_1 = require("./DateTime");
 var Tools_1 = require("./Tools");
 var Config_1 = require("./Config");
 ;
 var MainObj = /** @class */ (function () {
+    // public tools:Tools= new Tools();//just for acessing from JS
     function MainObj() {
         this.ui = new UI_1.UI();
         this.task_handler = new Tasks_1.TaskHandler();
@@ -78,8 +80,8 @@ var MainObj = /** @class */ (function () {
      */
     MainObj.prototype.Register = function () {
         //have to cast as any to get typescript to ignore that jquery.val may return undefined, and errors out
-        var email = $("#register_email").val();
-        var pwd = $("#register_pwd").val();
+        var email = Tools_1.Tools.SanitizeInput($("#register_email").val());
+        var pwd = Tools_1.Tools.SanitizeInput($("#register_pwd").val());
         console.log("Register: email and pwd entered: " + email + ", " + pwd);
         //so lets check the input first, and provide an error if something was wrong/ they didn't enter both inputs
         //now lets try to submit these to the php page, and get whether they were registered successfully
@@ -106,8 +108,8 @@ var MainObj = /** @class */ (function () {
         self.AjaxCall(success, error, data_to_send_obj);
     };
     MainObj.prototype.Login = function () {
-        var email = $("#login_email").val();
-        var pwd = $("#login_pwd").val();
+        var email = Tools_1.Tools.SanitizeInput($("#login_email").val());
+        var pwd = Tools_1.Tools.SanitizeInput($("#login_pwd").val());
         //clear password
         $("#login_pwd").val("");
         var data_to_send_obj = new Object();
@@ -153,8 +155,8 @@ var MainObj = /** @class */ (function () {
         //hide the AddTaskForm and Show the AddTaskButton again
         this.ui.ShowAddTaskBtn();
         //first get all the fields
-        var task = $("#new_task_name").val();
-        var category = $("#new_task_category").val();
+        var task = Tools_1.Tools.SanitizeInput($("#new_task_name").val());
+        var category = Tools_1.Tools.SanitizeInput($("#new_task_category").val());
         var start_date = $("#task_start_date").val(); //Jan 24 2018
         var start_time = $("#task_start_time").val(); //8 : 25 PM
         var date_mysql = DateTime_1.DateTime.GetDateForMySQLFromReadable(start_date);
@@ -179,6 +181,7 @@ var MainObj = /** @class */ (function () {
             $("#new_task_category").val("");
             //add the task to our tasks array
             var task = new Tasks_1.Task();
+            task.id = task_id;
             task.task = data_to_send_obj.task;
             task.category = data_to_send_obj.category;
             task.SetStartDateTimeFromMySQL(data_to_send_obj.date_time);
@@ -216,8 +219,8 @@ var MainObj = /** @class */ (function () {
         //now populate in all the task info:
         //have to grab the task object
         var task = this.tasks[task_id];
-        task_edit.find(".task-input-name").val(task.task);
-        task_edit.find(".task-input-category").val(task.category);
+        task_edit.find(".task-input-name").val(Tools_1.Tools.UnSanitizeInput(task.task));
+        task_edit.find(".task-input-category").val(Tools_1.Tools.UnSanitizeInput(task.category));
         task_edit.find(".task-input-start-date").val(task.start_date_time.date_display);
         task_edit.find(".task-input-start-time").val(task.start_date_time.time_display);
         if (task.end_date_time != null) {
@@ -259,7 +262,6 @@ var MainObj = /** @class */ (function () {
         function success(json_obj) {
             //so now update the task object in the array we already have with the update, then tell the UI to update that task
             self.tasks[task_id].task = data_to_send_obj.task_name;
-            self.tasks[task_id].category = data_to_send_obj.category;
             self.tasks[task_id].SetEndDateTimeFromMySQL(data_to_send_obj.date_time_end);
             //then tell main this task needs to be updated in the UI
             self.SetTaskUIFromTask($("#task-" + task_id), self.tasks[task_id]);
@@ -277,8 +279,8 @@ var MainObj = /** @class */ (function () {
         var task_edit_window = $("#task-edit-" + task_id);
         //lets check if we actually foudn the window:
         // console.log("")
-        var task_name = task_edit_window.find(".task-input-name").val();
-        var task_category = task_edit_window.find(".task-input-category").val();
+        var task_name = Tools_1.Tools.SanitizeInput(task_edit_window.find(".task-input-name").val());
+        var task_category = Tools_1.Tools.SanitizeInput(task_edit_window.find(".task-input-category").val());
         var task_date_start_str = task_edit_window.find(".task-input-start-date").val();
         var task_time_start_str = task_edit_window.find(".task-input-start-time").val();
         var task_date_end_str = task_edit_window.find(".task-input-end-date").val();
@@ -325,7 +327,13 @@ var MainObj = /** @class */ (function () {
         var task_prototype = $("#task_displayed_protoType").clone(true);
         task_prototype.css("display", "block");
         task_prototype.removeAttr("id");
-        task_prototype.appendTo("#tasks_container_date_range");
+        //should sort them into unfinished tasks vs. finished tasks
+        if (task.end_date_time != null)
+            //task_prototype.prependTo("#tasks_container_date_range");//prepend- so they are organized by date/ most recent
+            task_prototype.appendTo("#tasks_container_date_range");
+        else
+            // task_prototype.prependTo("#tasks_container_unfinished");
+            task_prototype.appendTo("#tasks_container_unfinished");
         //add the id to it, so we can fetch it easily
         task_prototype.attr("id", "task-" + task.id);
         this.SetTaskUIFromTask(task_prototype, task);
@@ -335,8 +343,8 @@ var MainObj = /** @class */ (function () {
      */
     MainObj.prototype.SetTaskUIFromTask = function (task_ui, task) {
         //now change out the tag values
-        task_ui.find(".task_displayed_name").html(task.task);
-        task_ui.find(".task_displayed_category").html("(" + task.category + ")");
+        task_ui.find(".task_displayed_name").html(Tools_1.Tools.UnSanitizeInput(task.task));
+        task_ui.find(".task_displayed_category").html("(" + Tools_1.Tools.UnSanitizeInput(task.category) + ")");
         task_ui.find(".task_displayed_start").html("Start: " + task.start_date_time.date_display + ",  " + task.start_date_time.time_display);
         if (!Tools_1.Tools.IsNull(task.end_date_time_str)) {
             task_ui.find(".task_displayed_end").html(("<br/>End: " + task.end_date_time.date_display + ",  " + task.end_date_time.time_display));
@@ -474,4 +482,5 @@ exports.MainObj = MainObj;
 var Main = new MainObj();
 //cast window as any to trick typescript into not throwing an error because window doesn't have property main
 window.Main = Main;
+window.Tools = Tools_1.Tools; //just for testing out tools static functions
 //# sourceMappingURL=Main.js.map

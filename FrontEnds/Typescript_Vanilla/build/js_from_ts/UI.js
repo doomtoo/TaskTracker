@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 // var Pikaday:any;
-var moment = require("moment");
+// import * as moment from "moment";
 var DateTime_1 = require("./DateTime");
 // declare var moment:any;
 var UI = /** @class */ (function () {
