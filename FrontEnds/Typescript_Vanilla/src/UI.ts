@@ -2,9 +2,12 @@
 // import * as moment from "moment";
 import {DateTime} from "./DateTime";
 import {Tools} from "./Tools";
+import {vex} from "./Main";
 declare var Pikaday:any; // way of getting JS loaded libraries working properly
 declare var moment:any;
 // declare var moment:any;
+//for vex modal dialog
+declare var vex:any; // way of getting JS loaded libraries working properly
 
 export class UI
 {
@@ -16,6 +19,16 @@ export class UI
     constructor()
     {
 
+    }
+    public ShowCalenderModal()
+    {
+        vex.dialog.confirm({
+            //message: 'Are you absolutely sure you want to destroy the alien planet?',
+            unsafeMessage: '<b>Hello </b>',
+            callback: function (value:any) {
+                console.log(value)
+            }
+        })
     }
 
     public ShowAddTaskForm()

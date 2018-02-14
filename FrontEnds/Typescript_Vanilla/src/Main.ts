@@ -41,6 +41,9 @@ export class MainObj
             this.LoggedIn();
         }
         this.SetupEnterHandling();
+
+        //for testing:
+        // this.ui.ShowCalenderModal();
     }
 
     /*

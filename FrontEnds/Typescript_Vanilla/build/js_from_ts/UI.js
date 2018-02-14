@@ -3,10 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // var Pikaday:any;
 // import * as moment from "moment";
 var DateTime_1 = require("./DateTime");
-// declare var moment:any;
 var UI = /** @class */ (function () {
     function UI() {
     }
+    UI.prototype.ShowCalenderModal = function () {
+        vex.dialog.confirm({
+            //message: 'Are you absolutely sure you want to destroy the alien planet?',
+            unsafeMessage: '<b>Hello </b>',
+            callback: function (value) {
+                console.log(value);
+            }
+        });
+    };
     UI.prototype.ShowAddTaskForm = function () {
         //hide AddTaskButton
         $("#btn-add-task").css("display", "none");

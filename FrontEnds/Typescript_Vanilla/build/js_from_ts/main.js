@@ -25,6 +25,8 @@ var MainObj = /** @class */ (function () {
             this.LoggedIn();
         }
         this.SetupEnterHandling();
+        //for testing:
+        // this.ui.ShowCalenderModal();
     }
     /*
     For doing Ajax calls to the server
